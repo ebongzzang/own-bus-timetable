@@ -1,0 +1,2 @@
+spring.application.name: own-bus-timetable
+spring.cloud.config.url: http://localhost:9090
