@@ -5,15 +5,6 @@ spring:
   profiles:
     active: dev
 ---
-spring:
-  profiles: dev
-  datasource:
-    hikari:
-      jdbc-url:
-      username:
-      password:
-
----
 
 spring:
   profiles: prod
