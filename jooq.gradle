@@ -1,0 +1,5 @@
+jooq {
+    version = '3.11.3'
+    edition = 'OSS'
+    
+}

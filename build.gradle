@@ -14,6 +14,11 @@ buildscript {
 	}
 }
 
+plugins {
+	id "org.flywaydb.flyway" version "5.1.4"
+	id 'nu.studer.jooq' version '3.0.1'
+}
+
 apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'idea'
@@ -27,12 +32,20 @@ sourceCompatibility = 1.8
 
 repositories {
 	mavenCentral()
+	maven {
+		url 'https://jitpack.io'
+	}
 }
-
 
 ext {
 	springCloudVersion = 'Finchley.RELEASE'
 }
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
 
 dependencies {
 	compile('org.springframework.boot:spring-boot-starter-amqp')
@@ -42,11 +55,17 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-data-redis-reactive')
 	compile('org.springframework.boot:spring-boot-starter-data-rest')
 	compile('org.springframework.boot:spring-boot-starter-webflux')
-//	compile('org.flywaydb:flyway-core')
 	compile('org.springframework.cloud:spring-cloud-starter')
 	compile('org.springframework.cloud:spring-cloud-starter-config')
 	runtime('org.hsqldb:hsqldb')
 	runtime('org.postgresql:postgresql')
+	compile 'org.jooq:jooq:3.11.3'
+	compile 'org.jooq:jooq-meta:3.11.3'
+	compile 'org.jooq:jooq-codegen:3.11.3'
+
+	compile "io.freefair.okhttp-spring-boot:okhttp3-spring-boot-starter:2.0.1"
+	compile('org.flywaydb:flyway-core')
+
 	compileOnly('org.projectlombok:lombok')
 
 	testCompile('org.spockframework:spock-spring:1.1-groovy-2.4')
@@ -56,9 +75,52 @@ dependencies {
 	testCompile('io.projectreactor:reactor-test')
 	testCompile('org.springframework.restdocs:spring-restdocs-mockmvc')
 }
+configurations {
+	querydslapt
+}
 
-dependencyManagement {
-	imports {
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+sourceSets {
+	generated {
+		java {
+			srcDirs = ['src/main/generated']
+		}
 	}
 }
+
+task generateQueryDSL(type: JavaCompile, group: 'build', description: 'Generates the QueryDSL query types') {
+	source = sourceSets.main.java
+	classpath = configurations.compile + configurations.querydslapt
+	options.compilerArgs = [
+			"-proc:only",
+			"-processor", "com.mysema.query.apt.jpa.JPAAnnotationProcessor"
+	]
+	destinationDir = sourceSets.generated.java.srcDirs.first()
+}
+
+idea {
+	module {
+		sourceDirs += file('src/main/generated')
+	}
+}
+compileJava {
+	dependsOn generateQueryDSL
+	source generateQueryDSL.destinationDir
+}
+
+compileGeneratedJava {
+	dependsOn generateQueryDSL
+	options.warnings = false
+	classpath += sourceSets.main.runtimeClasspath
+}
+
+clean {
+	delete sourceSets.generated.java.srcDirs
+}
+
+flyway {
+	url = DB_URL
+	user = DB_USERNAME
+	password = DB_PASSWORD
+	locations = ['filesystem:$project.projectDir/src/main/resources/flyway']
+}
+
