@@ -1,31 +1,37 @@
 package org.ebong2.ownbustimetable.collector;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
 import java.sql.Date;
 import java.time.Instant;
+import java.util.List;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+/**
+ * 도착 정보 데이터 덤프 스케쥴링 설정
+ */
+@Configuration
+public class ArrivalInfoScheduleConfigurer implements SchedulingConfigurer {
 
-abstract class ArrivalInfoScheduleConfigurer implements SchedulingConfigurer {
-    protected ArrivalInfoAccumulator accumulator;
+    protected final List<ArrivalInfoAccumulator> accumulator;
 
-    protected ArrivalInfoScheduleConfigurer(ArrivalInfoAccumulator accumulator) {
+    @Autowired
+    protected ArrivalInfoScheduleConfigurer(List<ArrivalInfoAccumulator> accumulator) {
         this.accumulator = accumulator;
     }
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
-        taskRegistrar.addTriggerTask(
-                () -> accumulator.put(), triggerContext -> {
-                    Instant nextTriggerTime = Instant.now().plus(accumulator.getInterval(), SECONDS);
-                    return Date.from(nextTriggerTime);
-                }
-        );
+        for (ArrivalInfoAccumulator acc : accumulator) {
+            taskRegistrar.addTriggerTask(
+                    acc::put, triggerContext -> {
+                        Instant nextTriggerTime = Instant.now().plus(acc.getInterval(), SECONDS);
+                        return Date.from(nextTriggerTime);
+                    });
+        }
     }
 }

@@ -1,5 +1,6 @@
 package org.ebong2.ownbustimetable.bus;
 
+import lombok.Builder;
 import lombok.Data;
 
 import javax.persistence.Entity;
@@ -8,6 +9,7 @@ import javax.persistence.Entity;
  * 특정 정류장에서 운행하는 모든 버스의 도착 예상 시간과 메타데이터를 표현하는 엔티티
  */
 @Data
+@Builder
 @Entity
 public class BusArrivalInfo {
 

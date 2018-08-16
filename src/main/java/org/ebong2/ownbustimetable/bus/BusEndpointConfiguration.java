@@ -42,7 +42,6 @@ public class BusEndpointConfiguration {
             livyClient = new LivyClientBuilder()
                     .setURI(new URI(livyUrl))
                     .build();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
