@@ -1,0 +1,57 @@
+flyway {
+    url = DB_URL
+    user = DB_USERNAME
+    password = DB_PASSWORD
+    locations = ['filesystem:$project.projectDir/src/main/resources/flyway']
+}
+
+configurations {
+    querydslapt
+}
+
+sourceSets {
+    generated {
+        java {
+            srcDirs = ['src/main/generated']
+        }
+    }
+}
+
+task generateQueryDSL(type: JavaCompile, group: 'build', description: 'Generates the QueryDSL query types') {
+    source = sourceSets.main.java
+    classpath = configurations.compile + configurations.querydslapt
+    options.compilerArgs = [
+            "-proc:only",
+            "-processor", "com.mysema.query.apt.jpa.JPAAnnotationProcessor"
+    ]
+    destinationDir = sourceSets.generated.java.srcDirs.first()
+}
+
+dependencies {
+    compile('org.flywaydb:flyway-core')
+    compile "com.querydsl:querydsl-jpa"
+    compile "com.querydsl:querydsl-apt"
+    testCompile 'org.flywaydb.flyway-test-extensions:flyway-spring-test:5.0.0'
+    runtime('org.hsqldb:hsqldb')
+    runtime('org.postgresql:postgresql')
+}
+
+idea {
+    module {
+        sourceDirs += file('src/main/generated')
+    }
+}
+compileJava {
+    dependsOn generateQueryDSL
+    source generateQueryDSL.destinationDir
+}
+
+compileGeneratedJava {
+    dependsOn generateQueryDSL
+    options.warnings = false
+    classpath += sourceSets.main.runtimeClasspath
+}
+
+clean {
+    delete sourceSets.generated.java.srcDirs
+}

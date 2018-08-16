@@ -16,7 +16,6 @@ buildscript {
 
 plugins {
 	id "org.flywaydb.flyway" version "5.1.4"
-	id 'nu.studer.jooq' version '3.0.1'
 }
 
 apply plugin: 'java'
@@ -25,6 +24,7 @@ apply plugin: 'idea'
 apply plugin: 'io.franzbecker.gradle-lombok'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+apply from: 'gradle/database.gradle'
 
 group = 'org.ebong2'
 version = '0.0.1-SNAPSHOT'
@@ -57,16 +57,13 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-webflux')
 	compile('org.springframework.cloud:spring-cloud-starter')
 	compile('org.springframework.cloud:spring-cloud-starter-config')
-	runtime('org.hsqldb:hsqldb')
-	runtime('org.postgresql:postgresql')
-	compile 'org.jooq:jooq:3.11.3'
-	compile 'org.jooq:jooq-meta:3.11.3'
-	compile 'org.jooq:jooq-codegen:3.11.3'
+	compile 'org.apache.livy:livy-client-http:0.5.0-incubating'
+	compile ('io.freefair.okhttp-spring-boot:okhttp3-spring-boot-starter:2.0.1')
 
-	compile "io.freefair.okhttp-spring-boot:okhttp3-spring-boot-starter:2.0.1"
-	compile('org.flywaydb:flyway-core')
+
 
 	compileOnly('org.projectlombok:lombok')
+
 
 	testCompile('org.spockframework:spock-spring:1.1-groovy-2.4')
 	testCompile 'com.nagternal:spock-genesis:0.6.0'
@@ -75,52 +72,5 @@ dependencies {
 	testCompile('io.projectreactor:reactor-test')
 	testCompile('org.springframework.restdocs:spring-restdocs-mockmvc')
 }
-configurations {
-	querydslapt
-}
 
-sourceSets {
-	generated {
-		java {
-			srcDirs = ['src/main/generated']
-		}
-	}
-}
-
-task generateQueryDSL(type: JavaCompile, group: 'build', description: 'Generates the QueryDSL query types') {
-	source = sourceSets.main.java
-	classpath = configurations.compile + configurations.querydslapt
-	options.compilerArgs = [
-			"-proc:only",
-			"-processor", "com.mysema.query.apt.jpa.JPAAnnotationProcessor"
-	]
-	destinationDir = sourceSets.generated.java.srcDirs.first()
-}
-
-idea {
-	module {
-		sourceDirs += file('src/main/generated')
-	}
-}
-compileJava {
-	dependsOn generateQueryDSL
-	source generateQueryDSL.destinationDir
-}
-
-compileGeneratedJava {
-	dependsOn generateQueryDSL
-	options.warnings = false
-	classpath += sourceSets.main.runtimeClasspath
-}
-
-clean {
-	delete sourceSets.generated.java.srcDirs
-}
-
-flyway {
-	url = DB_URL
-	user = DB_USERNAME
-	password = DB_PASSWORD
-	locations = ['filesystem:$project.projectDir/src/main/resources/flyway']
-}
 
