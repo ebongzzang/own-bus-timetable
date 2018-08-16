@@ -2,6 +2,7 @@ package org.ebong2.ownbustimetable.bus;
 
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.apache.livy.LivyClient;
 import org.apache.livy.LivyClientBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -26,12 +27,14 @@ public class BusEndpointConfiguration {
     @Primary
     @Bean
     @Qualifier(Region.GYEONGGI)
-    public HttpUrl.Builder gyeonggiClient(OkHttpClient httpClient) {
+    public HttpUrl.Builder gyeonggiClient() {
         return new HttpUrl.Builder()
                 .host("http://www.gbis.go.kr")
                 .addPathSegment("gbis2014")
-                .addPathSegment("schBus.action");
+                .addPathSegment("schBusAPI.action");
+
     }
+
 
     @Primary
     @Bean

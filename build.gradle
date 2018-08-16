@@ -59,7 +59,7 @@ dependencies {
 	compile('org.springframework.cloud:spring-cloud-starter-config')
 	compile 'org.apache.livy:livy-client-http:0.5.0-incubating'
 	compile ('io.freefair.okhttp-spring-boot:okhttp3-spring-boot-starter:2.0.1')
-
+	compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.6'
 
 
 	compileOnly('org.projectlombok:lombok')
