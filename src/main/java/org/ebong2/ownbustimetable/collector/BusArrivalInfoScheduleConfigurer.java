@@ -4,8 +4,13 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 //TODO: composition?
-public class BusArrivalInfoScheduleConfigurer extends ArrivalInfoScheduleConfigurer {
-    protected BusArrivalInfoScheduleConfigurer(ArrivalInfoAccumulator accumulator) {
-        super(accumulator);
+public class BusArrivalInfoScheduleConfigurer implements ArrivalInfoAccumulator {
+    @Override
+    public void put() {
+    }
+
+    @Override
+    public Integer getInterval() {
+        return null;
     }
 }

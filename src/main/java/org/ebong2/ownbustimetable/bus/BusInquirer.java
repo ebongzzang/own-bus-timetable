@@ -3,10 +3,7 @@ package org.ebong2.ownbustimetable.bus;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -17,36 +14,51 @@ import java.io.IOException;
 @Component
 public class BusInquirer {
 
-    private final HttpUrl.Builder urlBuilder;
-
-    private final OkHttpClient okHttpClient;
+    private final BusRequestCallBuilder urlBuilder;
+    private final ObjectMapper  objectMapper;
 
 
     @Autowired
-    protected BusInquirer(@Qualifier(BusEndpointConfiguration.Region.GYEONGGI) HttpUrl.Builder urlBuilder, OkHttpClient okHttpClient) {
+    protected BusInquirer(@Qualifier(BusEndpointConfiguration.Region.GYEONGGI) BusRequestCallBuilder urlBuilder, ObjectMapper objectMapper) {
         this.urlBuilder = urlBuilder;
-        this.okHttpClient = okHttpClient;
+        this.objectMapper = objectMapper;
     }
 
-    @Autowired
-    public void fire() throws IOException {
-        HttpUrl  url = urlBuilder
+
+    public void retrieveCurrentBusPosition() throws IOException {
+
+        Call command = urlBuilder
                 .addQueryParameter("cmd","searchBusStationJson")
                 .addQueryParameter("stationId", "218000179")
                 .build();
-        Request request = new Request.Builder()
-                .get()
-                .url(url)
-                .build();
-         Response response = okHttpClient.newCall(request).execute();
+
+        Response response = command.execute();
 
         String jsonData = response.body().string();
-        ObjectMapper  objectMapper = new ObjectMapper();
+
         JsonNode jsonNode = objectMapper.readTree(jsonData);
+        
+    }
 
-       log.debug( jsonNode.toString());
+    public BusRealTime retrieveBusRouteInfoById(int id) throws IOException  {
+        Call command = urlBuilder
+                .addQueryParameter("cmd","searchRouteJson")
+                .addQueryParameter("routeId", String.valueOf(id))
+                .build();
 
+        //TODO refactor
+        BusRealTime busArrivalInfo = null;
 
+        try(Response response = command.execute()) {
+            String jsonData = response.body().string();
+
+            JsonNode jsonTree = objectMapper.readTree(jsonData);
+
+            boolean found = jsonTree.path("result").path("realTime").path("list").isArray()
+            log.debug(busArrivalInfo.toString());
+        }
+
+        return busArrivalInfo;
     }
 
 

@@ -17,6 +17,7 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 @Configuration
 public class ArrivalInfoScheduleConfigurer implements SchedulingConfigurer {
 
+    //TODO: Accumulator는 하나로, 조회자들이 누적자 하나에게 위임하도록 변경
     protected final List<ArrivalInfoAccumulator> accumulator;
 
     @Autowired
